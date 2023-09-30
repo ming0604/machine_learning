@@ -49,7 +49,7 @@ def KNN_CR(k_neighbors,first_half_f,first_half_l,second_half_f,second_half_l):
         KNN_1.train_model(second_half_f[:,i],second_half_l)
         CR2= KNN_1.CR(first_half_f[:,i],first_half_l)
 
-        CR_avg= round(((CR1+CR2)/2),2)
+        CR_avg= ((CR1+CR2)/2)
         CR.append(CR_avg)
         fea_comb.append([i])
 
@@ -67,7 +67,7 @@ def KNN_CR(k_neighbors,first_half_f,first_half_l,second_half_f,second_half_l):
             KNN_1.train_model(x2,second_half_l)
             CR2= KNN_1.CR(x1,first_half_l)
 
-            CR_avg= round(((CR1+CR2)/2),2)
+            CR_avg= ((CR1+CR2)/2)
             CR.append(CR_avg)
             fea_comb.append([i,j])
 
@@ -86,7 +86,7 @@ def KNN_CR(k_neighbors,first_half_f,first_half_l,second_half_f,second_half_l):
                 KNN_1.train_model(x2,second_half_l)
                 CR2= KNN_1.CR(x1,first_half_l)
 
-                CR_avg= round(((CR1+CR2)/2),2)
+                CR_avg= ((CR1+CR2)/2)
                 CR.append(CR_avg)
                 fea_comb.append([i,j,k])
     
@@ -99,7 +99,7 @@ def KNN_CR(k_neighbors,first_half_f,first_half_l,second_half_f,second_half_l):
     KNN_1.train_model(second_half_f,second_half_l)
     CR2= KNN_1.CR(first_half_f,first_half_l)
 
-    CR_avg= round(((CR1+CR2)/2),2)
+    CR_avg= ((CR1+CR2)/2)
     CR.append(CR_avg)
     fea_comb.append([0,1,2,3])
 
@@ -154,18 +154,15 @@ class KNN:
                 distance_list.append(distance)
 
             distance_arr=np.array(distance_list)
-            distance_with_label= np.stack((distance_arr,self.training_label),axis=1)
-            sort_distance_index =np.argsort(distance_with_label[:,0],kind='mergesort')
-            distance_sort=np.take(distance_with_label,sort_distance_index,axis=0)
-            
-            #classify the label depends on k
             labels_arr=np.zeros(self.label_num)
             for i in range(self.k_neighbors):
-                label_temp=int(distance_sort[i,1])
-                labels_arr[label_temp-1]+=1
-
-            predictions.append((np.argmax(labels_arr))+1) 
-
+               min_index=np.argmin(distance_arr)
+               label_temp=self.training_label[min_index]
+               labels_arr[label_temp-1]+=1
+               distance_arr=np.delete(distance_arr,min_index)
+            
+            predictions.append((np.argmax(labels_arr))+1)
+            
         return np.array(predictions)
     
     def CR(self,test_data_features,test_data_labels):
