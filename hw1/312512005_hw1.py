@@ -77,7 +77,7 @@ def KNN_CR(k_neighbors,first_half_f,first_half_l,second_half_f,second_half_l):
             for k in range(j+1,num_features):
                 KNN_1= KNN(k=k_neighbors)
                 x1=np.stack((first_half_f[:,i],first_half_f[:,j],first_half_f[:,k]),axis=1)
-                x2=np.stack((second_half_f[:,i],second_half_f[:,j],first_half_f[:,k]),axis=1)
+                x2=np.stack((second_half_f[:,i],second_half_f[:,j],second_half_f[:,k]),axis=1)
 
                 #count CR of the condition that first half as training,second half as testing
                 KNN_1.train_model(x1,first_half_l)
@@ -105,7 +105,7 @@ def KNN_CR(k_neighbors,first_half_f,first_half_l,second_half_f,second_half_l):
 
     return CR,fea_comb
 
-def CR_table(CR,fea_comb,features):
+def CR_table(k,CR,fea_comb,features):
     #transform the features combinations into string type
     fc=[]
     for fea in fea_comb:
@@ -114,16 +114,20 @@ def CR_table(CR,fea_comb,features):
             temp.append(features[i])
         fc.append(' + '.join(temp))    
 
+    CR=["{:.2f}".format(CR_f) for CR_f in CR]
 
     data = {'Feature Combinations': fc,
-            'CR' : CR}
+            'CR(%)' : CR}
     
     df = pd.DataFrame(data)
 
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(8,5))
     ax.axis('off')
     table = ax.table(cellText=df.values, colLabels=df.columns, cellLoc='center', loc='center')
-
+    table.scale(1.2,1.3)
+    table.auto_set_font_size(False)
+    table.set_fontsize(9)
+    plt.title('k={:d}'.format(k))
     plt.show()
     
 class KNN:
@@ -197,16 +201,16 @@ def main():
     iris_second_half = np.concatenate((label1_second_half,label2_second_half,label3_second_half),axis=0)
 
     iris_first_half_features = iris_first_half[:,:-1]
-    iris_first_half_labels = iris_first_half[:,-1]
+    iris_first_half_labels = (iris_first_half[:,-1]).astype(int)
     iris_second_half_features = iris_second_half[:,:-1]
-    iris_second_half_labels = iris_second_half[:,-1]
+    iris_second_half_labels = (iris_second_half[:,-1]).astype(int)
 
     #k=1
     CR,feature_combinations = KNN_CR(1,iris_first_half_features, iris_first_half_labels, iris_second_half_features, iris_second_half_labels)
-    CR_table(CR,feature_combinations,features)
+    CR_table(1,CR,feature_combinations,features)
     #k=3
     CR,feature_combinations = KNN_CR(3,iris_first_half_features, iris_first_half_labels, iris_second_half_features, iris_second_half_labels)
-    CR_table(CR,feature_combinations,features)
+    CR_table(3,CR,feature_combinations,features)
 
 if __name__ == '__main__':
     main()
