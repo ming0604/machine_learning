@@ -154,13 +154,26 @@ class KNN:
                 distance_list.append(distance)
 
             distance_arr=np.array(distance_list)
+            
+            #use argsort to sort the distance from small to large
+            distance_with_label= np.stack((distance_arr,self.training_label),axis=1)
+            sort_distance_index =np.argsort(distance_with_label[:,0],kind='mergesort')
+            distance_sort=np.take(distance_with_label,sort_distance_index,axis=0)
+            
+            #classify the label depends on k 
+            labels_arr=np.zeros(self.label_num)
+            for i in range(self.k_neighbors):
+                label_temp=int(distance_sort[i,1])
+                labels_arr[label_temp-1]+=1
+            '''
+            #use argmin to find smallest distance index
             labels_arr=np.zeros(self.label_num)
             for i in range(self.k_neighbors):
                min_index=np.argmin(distance_arr)
                label_temp=self.training_label[min_index]
                labels_arr[label_temp-1]+=1
                distance_arr=np.delete(distance_arr,min_index)
-            
+            '''
             predictions.append((np.argmax(labels_arr))+1)
             
         return np.array(predictions)
