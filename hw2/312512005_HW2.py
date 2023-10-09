@@ -87,8 +87,8 @@ def LDA_roc(positive_data, negative_data, title):
 
     #C1 = np.linspace(0.0001, 10000, 20000)
     #C2 = np.ones(20000)
-    C1 = np.logspace(-4, 4, num=9)
-    C2 = np.ones(9)
+    C1 = np.logspace(-8, 8, num=97)
+    C2 = np.ones(97)
     ratio = C1/C2
     tpr1_arr=[]
     fpr1_arr=[]
@@ -137,9 +137,13 @@ def LDA_roc(positive_data, negative_data, title):
 
     aoc=np.abs(np.trapz(tpr_arr,fpr_arr))
     fig = plt.figure()
-    plt.plot(fpr_arr, tpr_arr, label='ROC curve, AOC={:.2f}'.format(aoc),marker = 'o')
-    for i in range(len(tpr_arr)):
-        plt.text(fpr_arr[i]+0.005, tpr_arr[i]+0.01, 'C1/C2={:.4f}'.format(ratio[i]),fontsize=5)
+    plt.plot(fpr_arr, tpr_arr, label='ROC curve, AOC={:.4f}'.format(aoc))
+    
+    plt.text(fpr_arr[0]+0.005, tpr_arr[0]+0.01, 'C1/C2={:.2e}'.format(ratio[0]),fontsize=5)
+    plt.text(fpr_arr[-1]+0.005, tpr_arr[-1]+0.01, 'C1/C2={:.2e}'.format(ratio[-1]),fontsize=5)
+    middle_index=len(fpr_arr)//2
+    plt.text(fpr_arr[middle_index]+0.005, tpr_arr[middle_index]+0.01, 'C1/C2={:.4f}'.format(ratio[middle_index]),fontsize=5)
+    plt.scatter(fpr_arr[[0,middle_index,-1]],tpr_arr[[0,middle_index,-1]])
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
     plt.legend(loc='lower right')
