@@ -71,7 +71,7 @@ def two_fold_LDA_two_classes(positive_data, negative_data):
     plt.title('LDA classifier of Versicolor and Virginica')
     plt.show()
 
-def LDA_roc(positive_data, negative_data):
+def LDA_roc(positive_data, negative_data, title):
     x1_first_half = positive_data[:25,:-1]
     x2_first_half = negative_data[:25,:-1]
     y1_first_half = positive_data[:25,-1]
@@ -85,33 +85,65 @@ def LDA_roc(positive_data, negative_data):
     positive_label = np.unique(y1_first_half)[0]
     negative_label = np.unique(y2_first_half)[0]
 
-    x_test = np.concatenate((x1_second_half,x2_second_half),axis=0)
-    y_test = np.concatenate((y1_second_half,y2_second_half),axis=0)
+    #C1 = np.linspace(0.0001, 10000, 20000)
+    #C2 = np.ones(20000)
     C1 = np.logspace(-4, 4, num=9)
     C2 = np.ones(9)
     ratio = C1/C2
-    tpr_arr=[]
-    fpr_arr=[]
+    tpr1_arr=[]
+    fpr1_arr=[]
+    tpr2_arr=[]
+    fpr2_arr=[]
     for i in range(len(C1)):
-        LDA = LDA_classifier(C1=C1[i], C2=C2[i])
-        LDA.train_model(x1_first_half,x2_first_half,positive_label,negative_label)
-        y_pred = LDA.predictions(x_test)
+        #fold1
+        LDA_1 = LDA_classifier(C1=C1[i], C2=C2[i])
+        LDA_1.train_model(x1_first_half,x2_first_half,positive_label,negative_label)
+        x_test = np.concatenate((x1_second_half,x2_second_half),axis=0)
+        y_test = np.concatenate((y1_second_half,y2_second_half),axis=0)
+        y_pred = LDA_1.predictions(x_test)
         cm = confusion_matrix(y_test, y_pred, labels=[3,2])
-        print(cm)
         tp = cm[0,0] 
         fn = cm[0,1]
         fp = cm[1,0]
         tn = cm[1,1]
         tpr = tp/(tp+fn)
         fpr = fp/(fp+tn)
-        tpr_arr.append(tpr)
-        fpr_arr.append(fpr)
-    plt.plot(fpr_arr, tpr_arr,marker = 'o')
+        tpr1_arr.append(tpr)
+        fpr1_arr.append(fpr)
+    
+        #fold 2
+        LDA_2 = LDA_classifier(C1=C1[i], C2=C2[i])
+        LDA_2.train_model(x1_second_half,x2_second_half,positive_label,negative_label)
+        x_test = np.concatenate((x1_first_half,x2_first_half),axis=0)
+        y_test = np.concatenate((y1_first_half,y2_first_half),axis=0)
+        y_pred = LDA_2.predictions(x_test)
+        cm = confusion_matrix(y_test, y_pred, labels=[3,2])
+        tp = cm[0,0] 
+        fn = cm[0,1]
+        fp = cm[1,0]
+        tn = cm[1,1]
+        tpr = tp/(tp+fn)
+        fpr = fp/(fp+tn)
+        tpr2_arr.append(tpr)
+        fpr2_arr.append(fpr)
+
+    tpr1_arr=np.array(tpr1_arr)
+    fpr1_arr=np.array(fpr1_arr)
+    tpr2_arr=np.array(tpr2_arr)
+    fpr2_arr=np.array(fpr2_arr)
+    tpr_arr=(tpr1_arr+tpr2_arr)/2
+    fpr_arr=(fpr1_arr+fpr2_arr)/2
+
+
+    aoc=np.abs(np.trapz(tpr_arr,fpr_arr))
+    fig = plt.figure()
+    plt.plot(fpr_arr, tpr_arr, label='ROC curve, AOC={:.2f}'.format(aoc),marker = 'o')
     for i in range(len(tpr_arr)):
-        plt.text(fpr_arr[i]+0.005, tpr_arr[i]+0.01, 'C1/C2={:.4f}'.format(ratio[i]),fontsize=7)
+        plt.text(fpr_arr[i]+0.005, tpr_arr[i]+0.01, 'C1/C2={:.4f}'.format(ratio[i]),fontsize=5)
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
-    plt.title("ROC curve (four features)")
+    plt.legend(loc='lower right')
+    plt.title(title)
     plt.show()
 
 def LDA_multiclass(class1_data,class2_data,class3_data):
@@ -337,7 +369,9 @@ def main():
     versicolor=iris_arr[50:100]
     virginica=iris_arr[100:]
     two_fold_LDA_two_classes(versicolor,virginica)
+    LDA_roc(virginica, versicolor,"ROC curve (four features)")
+    LDA_roc(virginica[:, [0, 1, 4]], versicolor[:, [0, 1, 4]],"ROC curve (1st & 2nd features)")
+    LDA_roc(virginica[:,2:], versicolor[:,2:],"ROC curve (3rd & 4th features)")
     LDA_multiclass(setosa,versicolor,virginica)
-    LDA_roc(virginica, versicolor)
 if __name__ == '__main__':
     main()
