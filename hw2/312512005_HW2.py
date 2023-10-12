@@ -133,16 +133,16 @@ def LDA_roc(positive_data, negative_data, title):
     fpr2_arr=np.array(fpr2_arr)
     tpr_arr=(tpr1_arr+tpr2_arr)/2
     fpr_arr=(fpr1_arr+fpr2_arr)/2
-
-
     aoc=np.abs(np.trapz(tpr_arr,fpr_arr))
+
+    #plot 
     fig = plt.figure()
     plt.plot(fpr_arr, tpr_arr, label='ROC curve, AOC={:.4f}'.format(aoc))
     
-    plt.text(fpr_arr[0]+0.005, tpr_arr[0]+0.01, 'C1/C2={:.2e}'.format(ratio[0]),fontsize=5)
-    plt.text(fpr_arr[-1]+0.005, tpr_arr[-1]+0.01, 'C1/C2={:.2e}'.format(ratio[-1]),fontsize=5)
+    plt.text(fpr_arr[0]+0.005, tpr_arr[0]+0.01, 'C1/C2={:.2e}'.format(ratio[0]),fontsize=6)
+    plt.text(fpr_arr[-1]+0.005, tpr_arr[-1]+0.01, 'C1/C2={:.2e}'.format(ratio[-1]),fontsize=6)
     middle_index=len(fpr_arr)//2
-    plt.text(fpr_arr[middle_index]+0.005, tpr_arr[middle_index]+0.01, 'C1/C2={:.4f}'.format(ratio[middle_index]),fontsize=5)
+    plt.text(fpr_arr[middle_index]+0.005, tpr_arr[middle_index]+0.01, 'C1/C2={:.4f}'.format(ratio[middle_index]),fontsize=6)
     plt.scatter(fpr_arr[[0,middle_index,-1]],tpr_arr[[0,middle_index,-1]])
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
@@ -150,42 +150,27 @@ def LDA_roc(positive_data, negative_data, title):
     plt.title(title)
     plt.show()
 
-def LDA_multiclass(class1_data,class2_data,class3_data):
-    x1_first_half = class1_data[:25,2:-1]
-    x2_first_half = class2_data[:25,2:-1]
-    x3_first_half = class3_data[:25,2:-1]
-    y1_first_half = class1_data[:25,-1]
-    y2_first_half = class2_data[:25,-1]
-    y3_first_half = class3_data[:25,-1]
+def LDA_multiclass(x1_train,x2_train,x3_train,y1_train,y2_train,y3_train,x_test,y_test, num_class_type):
 
-    x1_second_half = class1_data[25: ,2:-1]
-    x2_second_half = class2_data[25: ,2:-1]
-    x3_second_half = class3_data[25: ,2:-1]
-    y1_second_half = class1_data[25:,-1]
-    y2_second_half = class2_data[25:,-1]
-    y3_second_half = class3_data[25:,-1]
-    class_type=3
-    CR=[]
+  
     #fold 1 that first half as training,second half as testing
     #training multiclass LDA 
     LDA_1_2 = LDA_classifier(C1=1, C2=1)
-    positive_label = np.unique(y1_first_half)[0]
-    negative_label = np.unique(y2_first_half)[0]
-    LDA_1_2.train_model(x1_first_half,x2_first_half,positive_label,negative_label)
+    positive_label = np.unique(y1_train)[0]
+    negative_label = np.unique(y2_train)[0]
+    LDA_1_2.train_model(x1_train,x2_train,positive_label,negative_label)
 
     LDA_1_3 = LDA_classifier(C1=1, C2=1)
-    positive_label = np.unique(y1_first_half)[0]
-    negative_label = np.unique(y3_first_half)[0]
-    LDA_1_3.train_model(x1_first_half,x3_first_half,positive_label,negative_label)
+    positive_label = np.unique(y1_train)[0]
+    negative_label = np.unique(y3_train)[0]
+    LDA_1_3.train_model(x1_train,x3_train,positive_label,negative_label)
 
     LDA_2_3 = LDA_classifier(C1=1, C2=1)
-    positive_label = np.unique(y2_first_half)[0]
-    negative_label = np.unique(y3_first_half)[0]
-    LDA_2_3.train_model(x2_first_half,x3_first_half,positive_label,negative_label)
+    positive_label = np.unique(y2_train)[0]
+    negative_label = np.unique(y3_train)[0]
+    LDA_2_3.train_model(x2_train,x3_train,positive_label,negative_label)
 
     #pridiction of each classifier
-    x_test = np.concatenate((x1_second_half,x2_second_half,x3_second_half),axis=0)
-    y_test = np.concatenate((y1_second_half,y2_second_half,y3_second_half),axis=0)
     pred_1_2 = LDA_1_2.predictions(x_test)
     pred_1_3 = LDA_1_3.predictions(x_test)
     pred_2_3 = LDA_2_3.predictions(x_test)
@@ -194,8 +179,8 @@ def LDA_multiclass(class1_data,class2_data,class3_data):
     #find final pridiction
     final_prediction = []
     for i in range(len(y_test)):
-        class_arr=np.zeros(class_type)
-        for j in range(class_type):
+        class_arr=np.zeros(num_class_type)
+        for j in range(num_class_type):
             if(predictions[j][i]!=1 and predictions[j][i]!=2 and predictions[j][i]!=3):
                 pass
             else:
@@ -217,68 +202,10 @@ def LDA_multiclass(class1_data,class2_data,class3_data):
     for i in equal_bool:
         if i == True:
             num_correct_pred+=1
-    CR1= (num_correct_pred/len(y_test))*100
-    CR.append(CR1)
+    CR= (num_correct_pred/len(y_test))*100
+    return CR
 
-    #fold 2 that second half as training,first half as testing
-    #training multiclass LDA 
-    LDA_1_2 = LDA_classifier(C1=1, C2=1)
-    positive_label = np.unique(y1_second_half)[0]
-    negative_label = np.unique(y2_second_half)[0]
-    LDA_1_2.train_model(x1_second_half,x2_second_half,positive_label,negative_label)
-
-    LDA_1_3 = LDA_classifier(C1=1, C2=1)
-    positive_label = np.unique(y1_second_half)[0]
-    negative_label = np.unique(y3_second_half)[0]
-    LDA_1_3.train_model(x1_second_half,x3_second_half,positive_label,negative_label)
-
-    LDA_2_3 = LDA_classifier(C1=1, C2=1)
-    positive_label = np.unique(y2_second_half)[0]
-    negative_label = np.unique(y3_second_half)[0]
-    LDA_2_3.train_model(x2_second_half,x3_second_half,positive_label,negative_label)
-
-    #pridiction of each classifier
-    x_test = np.concatenate((x1_first_half,x2_first_half,x3_first_half),axis=0)
-    y_test = np.concatenate((y1_first_half,y2_first_half,y3_first_half),axis=0)
-    pred_1_2 = LDA_1_2.predictions(x_test)
-    pred_1_3 = LDA_1_3.predictions(x_test)
-    pred_2_3 = LDA_2_3.predictions(x_test)
-    predictions=np.stack((pred_1_2,pred_1_3,pred_2_3),axis=0)
-
-    #find final pridiction
-    final_prediction = []
-    for i in range(len(y_test)):
-        class_arr=np.zeros(class_type)
-        for j in range(class_type):
-            if(predictions[j][i]!=1 and predictions[j][i]!=2 and predictions[j][i]!=3):
-                pass
-            else:
-                temp=int(predictions[j][i])
-                class_arr[temp-1] +=1
-        
-        max_value = np.max(class_arr)
-        max_indices = np.where(class_arr == max_value)[0]
-        if len(max_indices) == 1:
-            final_prediction.append(max_indices[0]+1)
-        else:
-            final_prediction.append(np.nan)
-
-    final_prediction_arr=np.array(final_prediction)
-    
-    #count CR
-    equal_bool=(final_prediction_arr==y_test)
-    num_correct_pred=0
-    for i in equal_bool:
-        if i == True:
-            num_correct_pred+=1
-    CR2= (num_correct_pred/len(y_test))*100
-    CR.append(CR2)
-
-    #average CR
-    CR_avg= ((CR1+CR2)/2)
-    CR.append(CR_avg)
-    CR=["{:.2f}".format(CR_f) for CR_f in CR]
-    
+def LDA_multi_CR_table(CR):
     #plot table
     data = {'CR(%)' : CR}
     index_list = ['fold1', 'fold2', 'average CR']
@@ -366,16 +293,47 @@ def main():
     iris_arr=read_to_array("iris.txt")
     features = ['Sepal length', 'Sepal width', 'Petal length', 'Petal width']
     species =['Setosa', 'Versicolor', 'Virginica']
-    
-
-    #Split the data into the first half and the second half
     setosa=iris_arr[:50]
     versicolor=iris_arr[50:100]
     virginica=iris_arr[100:]
+
     two_fold_LDA_two_classes(versicolor,virginica)
+
+    #LDA roc and aoc with the change of the C1/C2
     LDA_roc(virginica, versicolor,"ROC curve (four features)")
     LDA_roc(virginica[:, [0, 1, 4]], versicolor[:, [0, 1, 4]],"ROC curve (1st & 2nd features)")
     LDA_roc(virginica[:,2:], versicolor[:,2:],"ROC curve (3rd & 4th features)")
-    LDA_multiclass(setosa,versicolor,virginica)
+
+    #multiclass LDA classification
+    x1_first_half = setosa[:25,2:-1]
+    x2_first_half = versicolor[:25,2:-1]
+    x3_first_half = virginica[:25,2:-1]
+    y1_first_half = setosa[:25,-1]
+    y2_first_half = versicolor[:25,-1]
+    y3_first_half = virginica[:25,-1]
+
+    x1_second_half = setosa[25: ,2:-1]
+    x2_second_half = versicolor[25: ,2:-1]
+    x3_second_half = virginica[25: ,2:-1]
+    y1_second_half = setosa[25:,-1]
+    y2_second_half = versicolor[25:,-1]
+    y3_second_half = virginica[25:,-1]
+
+    CR=[]
+    x_test = np.concatenate((x1_second_half,x2_second_half,x3_second_half),axis=0)
+    y_test = np.concatenate((y1_second_half,y2_second_half,y3_second_half),axis=0)
+    CR1=LDA_multiclass(x1_first_half,x2_first_half,x3_first_half,y1_first_half,y2_first_half,y3_first_half,x_test,y_test,3)
+    CR.append(CR1)
+    x_test = np.concatenate((x1_first_half,x2_first_half,x3_first_half),axis=0)
+    y_test = np.concatenate((y1_first_half,y2_first_half,y3_first_half),axis=0)
+    CR2=LDA_multiclass(x1_second_half,x2_second_half,x3_second_half,y1_second_half,y2_second_half,y3_second_half,x_test,y_test,3)
+    CR.append(CR2)
+    CR_avg= ((CR1+CR2)/2)
+    CR.append(CR_avg)
+    CR=["{:.2f}".format(CR_f) for CR_f in CR]
+
+    #plot multiclass classification CR table
+    LDA_multi_CR_table(CR)
+
 if __name__ == '__main__':
     main()
