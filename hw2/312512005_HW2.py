@@ -32,8 +32,8 @@ def two_fold_LDA_two_classes(positive_data, negative_data):
     CR=[]
     #count CR of the condition that first half as training,second half as testing
     LDA.train_model(x1_first_half,x2_first_half,positive_label,negative_label)
-    weight_vector.append(LDA.W_T)
-    bias.append(LDA.b)
+    weight_vector.append(np.round(LDA.W_T, 2))
+    bias.append(np.round(LDA.b, 2))
     x_test = np.concatenate((x1_second_half,x2_second_half),axis=0)
     y_test = np.concatenate((y1_second_half,y2_second_half),axis=0)
     CR1= LDA.CR(x_test,y_test)
@@ -41,8 +41,8 @@ def two_fold_LDA_two_classes(positive_data, negative_data):
 
     #count CR of the condition that second half as training,first half as testing
     LDA.train_model(x1_second_half,x2_second_half,positive_label,negative_label)
-    weight_vector.append(LDA.W_T)
-    bias.append(LDA.b)
+    weight_vector.append(np.round(LDA.W_T, 2))
+    bias.append(np.round(LDA.b, 2))
     x_test = np.concatenate((x1_first_half,x2_first_half),axis=0)
     y_test = np.concatenate((y1_first_half,y2_first_half),axis=0)
     CR2= LDA.CR(x_test,y_test)
@@ -51,7 +51,7 @@ def two_fold_LDA_two_classes(positive_data, negative_data):
     CR.append(CR_avg)
 
     CR=["{:.2f}".format(CR_f) for CR_f in CR]
-
+   
     #plot table
     data = {'weight_vector': weight_vector ,
             'bias' : bias,
@@ -85,8 +85,7 @@ def LDA_roc(positive_data, negative_data, title):
     positive_label = np.unique(y1_first_half)[0]
     negative_label = np.unique(y2_first_half)[0]
 
-    #C1 = np.linspace(0.0001, 10000, 20000)
-    #C2 = np.ones(20000)
+    #ratio from 0.00000001~100000000
     C1 = np.logspace(-8, 8, num=97)
     C2 = np.ones(97)
     ratio = C1/C2
@@ -133,11 +132,11 @@ def LDA_roc(positive_data, negative_data, title):
     fpr2_arr=np.array(fpr2_arr)
     tpr_arr=(tpr1_arr+tpr2_arr)/2
     fpr_arr=(fpr1_arr+fpr2_arr)/2
-    aoc=np.abs(np.trapz(tpr_arr,fpr_arr))
+    auc=np.abs(np.trapz(tpr_arr,fpr_arr))
 
     #plot 
     fig = plt.figure()
-    plt.plot(fpr_arr, tpr_arr, label='ROC curve, AOC={:.4f}'.format(aoc))
+    plt.plot(fpr_arr, tpr_arr, label='ROC curve, AUC={:.4f}'.format(auc))
     
     plt.text(fpr_arr[0]+0.005, tpr_arr[0]+0.01, 'C1/C2={:.2e}'.format(ratio[0]),fontsize=6)
     plt.text(fpr_arr[-1]+0.005, tpr_arr[-1]+0.01, 'C1/C2={:.2e}'.format(ratio[-1]),fontsize=6)
