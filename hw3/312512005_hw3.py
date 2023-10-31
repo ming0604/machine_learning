@@ -90,8 +90,9 @@ class linear_SVM:
             else:
                 alpha[i] = np.round(alpha[i],6)
                 #print(f"support vector: alpha = {alpha[i]}")
-        self.alpha = np.round(alpha, 4)
-        self.alpha_sum = np.round(np.sum(alpha),4)
+
+        self.alpha = alpha
+        self.alpha_sum = np.round(np.sum(self.alpha),4)
 
         #find b*
         b_list=[]
@@ -187,8 +188,8 @@ class SVM:
             else:
                 alpha[i] = np.round(alpha[i],6)
                 #print(f"support vector: alpha = {alpha[i]}")
-        self.alpha = np.round(alpha, decimals=4)
-        self.alpha_sum = np.round(np.sum(alpha),4)
+        self.alpha = alpha
+        self.alpha_sum = np.round(np.sum(self.alpha),4)
 
         #find b*
         b_list=[]
@@ -266,7 +267,7 @@ def main():
         l_SVM = linear_SVM(C=C[i])
         l_SVM.train_model(x_train,y_train)
         print("linear_SVM(C={:d}) :".format(C[i]))
-        print("alpha : ",l_SVM.alpha)
+        print("alpha : ",np.round(l_SVM.alpha,4))
         print("total sum of alpha : ",l_SVM.alpha_sum,"\n")
         bias.append(l_SVM.b_optimal)
         CR.append(l_SVM.CR(x_test,y_test))
@@ -281,7 +282,7 @@ def main():
         RBF_SVM = SVM(C=C[i],sigma=sigma[i],kernel='RBF')
         RBF_SVM.train_model(x_train,y_train)
         print("nonlinear_SVM_RBF(sigma={:.2f}) :".format(sigma[i]))
-        print("alpha : ",RBF_SVM.alpha)
+        print("alpha : ",np.round(RBF_SVM.alpha,4))
         print("total sum of alpha : ",RBF_SVM.alpha_sum,"\n")
         bias.append(RBF_SVM.b_optimal)
         CR.append(RBF_SVM.CR(x_test,y_test))
@@ -296,7 +297,7 @@ def main():
         p_SVM = SVM(C=C[i],p=p[i],kernel='polynomial')
         p_SVM.train_model(x_train,y_train)
         print("nonlinear_SVM_polynomial(p={:f}) :".format(p[i]))
-        print("alpha : ",p_SVM.alpha)
+        print("alpha : ",np.round(p_SVM.alpha,4))
         print("total sum of alpha : ",p_SVM.alpha_sum,"\n")
         bias.append(p_SVM.b_optimal)
         CR.append(p_SVM.CR(x_test,y_test))
