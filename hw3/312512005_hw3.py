@@ -19,13 +19,13 @@ def linear_SVM_table(C,b,CR):
     
     df = pd.DataFrame(data)
 
-    fig, ax = plt.subplots(figsize=(8,5))
+    fig, ax = plt.subplots(figsize=(8,4))
     ax.axis('off')
     table = ax.table(cellText=df.values, colLabels=df.columns, cellLoc='center', loc='center')
-    table.scale(1.2,1.3)
+    table.scale(1.2,2)
     table.auto_set_font_size(False)
-    table.set_fontsize(9)
-    plt.title('Linear SVM')
+    table.set_fontsize(10)
+    plt.title('Linear SVM',y=0.8)
     plt.show()
 
 def nonlinear_SVM_table(C,b,kernel,para,CR):
@@ -44,13 +44,13 @@ def nonlinear_SVM_table(C,b,kernel,para,CR):
     
     df = pd.DataFrame(data)
 
-    fig, ax = plt.subplots(figsize=(8,5))
+    fig, ax = plt.subplots(figsize=(8,4))
     ax.axis('off')
     table = ax.table(cellText=df.values, colLabels=df.columns, cellLoc='center', loc='center')
-    table.scale(1.2,1.3)
+    table.scale(1.2,2)
     table.auto_set_font_size(False)
-    table.set_fontsize(9)
-    plt.title('nop Linear SVM ({:s})'.format(kernel))
+    table.set_fontsize(10)
+    plt.title('Nonlinear SVM ({:s})'.format(kernel),y=0.9)
     plt.show()
 
 class linear_SVM:
@@ -74,7 +74,7 @@ class linear_SVM:
         P = np.array(P)
         q = -np.ones(len(self.x_train))
         A = self.y_train
-        b = np.array([0.0])
+        b = np.array([0])
         lb = np.zeros(len(self.x_train))
         ub = np.ones(len(self.x_train))*self.C
         alpha = solve_qp(P, q, None, None, A, b, lb, ub, solver="clarabel")
@@ -281,7 +281,7 @@ def main():
     for i in range(len(C)):
         RBF_SVM = SVM(C=C[i],sigma=sigma[i],kernel='RBF')
         RBF_SVM.train_model(x_train,y_train)
-        print("nonlinear_SVM_RBF(sigma={:.2f}) :".format(sigma[i]))
+        print("nonlinear_SVM_RBF(C=10, sigma={:.2f}) :".format(sigma[i]))
         print("alpha : ",np.round(RBF_SVM.alpha,4))
         print("total sum of alpha : ",RBF_SVM.alpha_sum,"\n")
         bias.append(RBF_SVM.b_optimal)
@@ -296,7 +296,7 @@ def main():
     for i in range(len(C)):
         p_SVM = SVM(C=C[i],p=p[i],kernel='polynomial')
         p_SVM.train_model(x_train,y_train)
-        print("nonlinear_SVM_polynomial(p={:f}) :".format(p[i]))
+        print("nonlinear_SVM_polynomial(C=10, p={:d}) :".format(p[i]))
         print("alpha : ",np.round(p_SVM.alpha,4))
         print("total sum of alpha : ",p_SVM.alpha_sum,"\n")
         bias.append(p_SVM.b_optimal)

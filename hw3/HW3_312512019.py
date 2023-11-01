@@ -13,15 +13,18 @@ X_test =  np.concatenate((data[75:100, 2:4], data[125:, 2:4]), axis = 0)
 Y_train = np.ones(50)
 Y_train[25:] = -1
 Y_test = Y_train.copy()
+np.set_printoptions(suppress = True)
 
 def Linear_kernel(Xi, Xj):
     K = np.dot(Xi.T, Xj)
     return K
 
+
 def RBF_kernel(Xi, Xj, sigma):
     norm = (np.linalg.norm(Xi - Xj)) ** 2
     K = np.exp(-norm / (2 * (sigma**2)))
     return K
+
 
 def Poly_kernel(Xi, Xj, times):
     dot = np.dot(Xi.T, Xj)
@@ -49,7 +52,7 @@ def Cal_Alpha(X_train, Y_train, kernel, C, times, sigma):
 
         P = np.dot(Y_train.reshape((train_num, 1)), Y_train.reshape((1, train_num))) * temp
 
-    if kernel == 'RBF':
+    elif kernel == 'RBF':
         train_num = X_train.shape[0]
         temp1 = np.ones((train_num, train_num))
         for i in range(train_num):
@@ -58,7 +61,7 @@ def Cal_Alpha(X_train, Y_train, kernel, C, times, sigma):
 
         P = np.dot(Y_train.reshape((train_num,1)), Y_train.reshape((1,train_num))) * temp1
 
-    if kernel == 'Poly':
+    elif kernel == 'Poly':
         train_num = X_train.shape[0]
         temp2 = np.ones((train_num, train_num))
         for i in range(train_num):
@@ -79,21 +82,21 @@ def Cal_Alpha(X_train, Y_train, kernel, C, times, sigma):
             alpha[i] = np.round(alpha[i], 6)
         else:
             alpha[i] = np.round(alpha[i], 6)
-        
+
         #print(f"support vector: alpha = {alpha[i]}")
         
     alpha_sum = np.round(np.sum(alpha), 4)
 
     return alpha, alpha_sum
 
-def KT_condition(alpha, X_train, Y_train, kernel, times, sigma):
+def KT_condition(alpha, X_train, Y_train, kernel, C, times, sigma):
     b_star = 0
     count = 0
-    for k in range(alpha.size):
-        if alpha[k] > 0:
+    for k in range(len(alpha)):
+        if alpha[k] > 0 and alpha[k] < C:
             temp = 0
             for i in range(X_train.shape[0]):
-                if alpha[i] > 0:
+                if alpha[i] > 0:                        # if alpha = 0, alphai*yi*K(xi, xk) = 0 
                     if kernel == 'Linear':
                         temp += alpha[i] * Y_train[i] * Linear_kernel(X_train[i], X_train[k])
 
@@ -113,8 +116,7 @@ def KT_condition(alpha, X_train, Y_train, kernel, times, sigma):
                  
 def SVM(X_train, Y_train, kernel, C, times, sigma, X_test, Y_test):
     alpha, alpha_sum = Cal_Alpha(X_train, Y_train, kernel, C, times, sigma)
-    b_star = KT_condition(alpha, X_train, Y_train, kernel, times, sigma)
-    #Y_predict = []
+    b_star = KT_condition(alpha, X_train, Y_train, kernel, C, times, sigma)
     count = 0 
     for i in range(X_test.shape[0]):
         temp = 0
@@ -131,16 +133,15 @@ def SVM(X_train, Y_train, kernel, C, times, sigma, X_test, Y_test):
         
         D = temp + b_star
         if D >= 0:
-            #Y_predict.append(1)
             if Y_test[i] == 1:
                 count += 1
         else:
-            #Y_predict.append(-1)
             if Y_test[i] == -1:
                 count += 1
         
     CR = round((count/len(Y_test)) * 100, 2)
-    b_star = np.round(b_star , 4)
+    b_star = np.round(b_star, 4)
+    alpha = np.round(alpha, 4)
     
     return alpha, alpha_sum, b_star, CR
 
@@ -148,14 +149,14 @@ def SVM(X_train, Y_train, kernel, C, times, sigma, X_test, Y_test):
 #%%  Linear SVM
 # Kernel function: K(xi,xj) = np.dot(xi.T, xj)
 
-Linear_C = np.array([1, 10, 100])
+Linear_C = np.array([1.0, 10.0, 100.0])
 print("Linear SVM: ")
 for i in range(len(Linear_C)):
     alpha, alpha_sum, b_star, CR = SVM(X_train, Y_train, 'Linear', Linear_C[i], 1, None, X_test, Y_test)
     print(f"Linear SVM (C = {Linear_C[i]}) total alpha value = {alpha_sum}")
-    print(f"First five alpha value = {alpha[0:5]}")
+    print(f"alpha = \n{alpha}\n")
     print(f"b* = {b_star}")
-    print(f"CR (C = {Linear_C[i]}) : {CR} %\n")
+    print(f"CR (C = {Linear_C[i]}) : {CR} %\n\n")
     
 # Workspace allocation error：When P matrix has negative eigenvalue
 
@@ -168,9 +169,9 @@ print("\nRBF kernel-based SVM: ")
 for i in range(len(RBF_sigma)):
     alpha, alpha_sum, b_star, CR = SVM(X_train, Y_train, 'RBF', 10.0, None, RBF_sigma[i], X_test, Y_test)
     print(f"RBF SVM (sigma = {RBF_sigma[i]}) total alpha value = {alpha_sum}")
-    print(f"First five alpha value ={alpha[0:5]}")
+    print(f"alpha = \n{alpha}\n")
     print(f"b* = {b_star}")
-    print(f"CR (sigma = {RBF_sigma[i]}) : {CR} %\n")
+    print(f"CR (sigma = {RBF_sigma[i]}) : {CR} %\n\n")
 
 
 #%%  Polynomial kernel-based SVM
@@ -181,6 +182,6 @@ print("\nPolynomial kernel-based SVM: ")
 for i in range(len(Poly_p)):
     alpha, alpha_sum, b_star, CR = SVM(X_train, Y_train, 'Poly', 10.0, Poly_p[i], None, X_test, Y_test)
     print(f"Polynomial SVM (p = {Poly_p[i]}) total alpha value = {alpha_sum}")
-    print(f"First five alpha value = {alpha[0:5]}")
+    print(f"alpha = \n{alpha}\n")
     print(f"b* = {b_star}")
-    print(f"CR (p = {Poly_p[i]}) : {CR} %\n")
+    print(f"CR (p = {Poly_p[i]}) : {CR} %\n\n")
