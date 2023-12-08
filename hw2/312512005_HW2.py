@@ -179,6 +179,7 @@ def LDA_multiclass(x1_train,x2_train,x3_train,y1_train,y2_train,y3_train,x_test,
     final_prediction = []
     for i in range(len(y_test)):
         class_arr=np.zeros(num_class_type)
+        #count the prediction of each model votes
         for j in range(num_class_type):
             if(predictions[j][i]!=1 and predictions[j][i]!=2 and predictions[j][i]!=3):
                 pass
@@ -187,6 +188,7 @@ def LDA_multiclass(x1_train,x2_train,x3_train,y1_train,y2_train,y3_train,x_test,
                 class_arr[temp-1] +=1
         
         max_value = np.max(class_arr)
+        #np.where return a tuple
         max_indices = np.where(class_arr == max_value)[0]
         if len(max_indices) == 1:
             final_prediction.append(max_indices[0]+1)

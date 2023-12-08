@@ -247,63 +247,6 @@ def main():
     versicolor=iris_arr[50:100]
     virginica=iris_arr[100:]
     
-    #define training and test data 
-    x1_train = versicolor[:25, 2:-1]
-    x2_train = virginica[:25, 2:-1]
-    x1_test = versicolor[25:, 2:-1]
-    x2_test = virginica[25:, 2:-1]
     
-    x_train = np.concatenate((x1_train,x2_train),axis=0)
-    x_test = np.concatenate((x1_test,x2_test),axis=0)
-    y_train = np.ones(len(x_train))
-    y_train[25:] = -1
-    y_test = np.ones(len(x_test))
-    y_test[25:] = -1
-
-    np.set_printoptions(suppress=True)
-    #linear SVM C=1
-    C = [1, 10, 100]
-    bias= []
-    CR=[]
-    for i in range(len(C)):
-        l_SVM = linear_SVM(C=C[i])
-        l_SVM.train_model(x_train,y_train)
-        print("linear_SVM(C={:d}) :".format(C[i]))
-        print("alpha : ",np.round(l_SVM.alpha,4))
-        print("total sum of alpha : ",l_SVM.alpha_sum,"\n")
-        bias.append(l_SVM.b_optimal)
-        CR.append(l_SVM.CR(x_test,y_test))
-    linear_SVM_table(C,bias,CR)
-
-    #nonlinear SVM RBF kernel
-    C = [10, 10, 10, 10, 10]
-    sigma = [5, 1, 0.5, 0.1, 0.05]
-    bias= []
-    CR=[]
-    for i in range(len(C)):
-        RBF_SVM = SVM(C=C[i],sigma=sigma[i],kernel='RBF')
-        RBF_SVM.train_model(x_train,y_train)
-        print("nonlinear_SVM_RBF(C=10, sigma={:.2f}) :".format(sigma[i]))
-        print("alpha : ",np.round(RBF_SVM.alpha,4))
-        print("total sum of alpha : ",RBF_SVM.alpha_sum,"\n")
-        bias.append(RBF_SVM.b_optimal)
-        CR.append(RBF_SVM.CR(x_test,y_test))
-    nonlinear_SVM_table(C,bias,'RBF',sigma,CR)
-
-    #nonlinear SVM polynomial kernel
-    C = [10, 10, 10, 10, 10]
-    p = [1, 2, 3, 4, 5]
-    bias= []
-    CR=[]
-    for i in range(len(C)):
-        p_SVM = SVM(C=C[i],p=p[i],kernel='polynomial')
-        p_SVM.train_model(x_train,y_train)
-        print("nonlinear_SVM_polynomial(C=10, p={:d}) :".format(p[i]))
-        print("alpha : ",np.round(p_SVM.alpha,4))
-        print("total sum of alpha : ",p_SVM.alpha_sum,"\n")
-        bias.append(p_SVM.b_optimal)
-        CR.append(p_SVM.CR(x_test,y_test))
-    nonlinear_SVM_table(C,bias,'polynomial',p,CR)   
-
 if __name__ == '__main__':
     main()
