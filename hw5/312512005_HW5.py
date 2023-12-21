@@ -77,7 +77,7 @@ class LDA_classifier:
 def two_fold_LDA(x,y):
 
     LDA = LDA_classifier(C1=1, C2=1)
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=777)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=0)
 
     #fold 1 : x_train as training data, x_test as test data
     #seperate label 0 and label 1 data 
@@ -140,6 +140,72 @@ def SFS(data,y,feature_names):
     print("Optimal feature subset names: ", optimal_features)
     print("best CR by SFS: {:.2f}".format(best_CR))
 
+def Fisher(data,y,feature_names):
+    x_label_0 = data[y==0]
+    x_label_1 = data[y==1]
+    m1 = np.mean(x_label_0,axis=0,keepdims=True)
+    m2 = np.mean(x_label_1,axis=0,keepdims=True)
+    m = np.mean(data,axis=0,keepdims=True)
+    n1 = len(x_label_0)
+    n2 = len(x_label_1)
+    p1=(n1/(n1+n2))
+    p2=(n2/(n1+n2))
+    feature_num = len(data[0])
+    #calculate Sw
+    sw1 = np.zeros((feature_num, feature_num))
+    for xi in x_label_0:
+        xi=np.array([xi])
+        temp = np.matmul(((xi-m1).T),(xi-m1))
+        sw1 = sw1 + temp
+    
+    sw2 = np.zeros((feature_num, feature_num))
+    for xj in x_label_1:
+        xj=np.array([xj])
+        temp = np.matmul(((xj-m2).T),(xj-m2))
+        sw2 = sw2 + temp
+
+    sw1 = sw1/(n1)
+    sw2 = sw2/(n2)
+    Sw =  p1*sw1 + p2*sw2
+    
+    #calculate Sb
+    sb1 = n1*(np.matmul(((m1-m).T),(m1-m)))
+    sb2 = n2*(np.matmul(((m2-m).T),(m2-m)))
+    Sb = sb1 + sb2
+
+    #calculate fisher's scores
+    fisher_scores = []
+    for k in range(feature_num):
+        f_score = Sw[k,k]/Sb[k,k]
+        fisher_scores.append(f_score)
+
+    #sort features by fisher's scores in descending order
+    #get fisher's scores in ascending order index
+    sort_ascending_index = np.argsort(np.array(fisher_scores))
+    #reverse it into descending order
+    sort_descending_index = sort_ascending_index[::-1]
+
+    #calculate top n f-scores-ranked
+    n = 0
+    CR_list = []
+    while n < feature_num:
+        n = n + 1
+        temp_feature = sort_descending_index[:n]
+        x = data[ : , temp_feature]
+        CR = two_fold_LDA(x,y)
+        CR_list.append(CR)
+    
+    CR_max_index = np.argmax(np.array(CR_list))
+    best_top_N = CR_max_index+1
+    for i in range(feature_num):
+        print("Top-{:d}-ranked features, CR: {:.2f} ".format(i+1,CR_list[i]))
+
+    optimal_features = feature_names[sort_descending_index[:best_top_N]]
+    best_CR = CR_list[CR_max_index]
+    print("The number of features in the Optimal feature subset: {:d} ".format(best_top_N))
+    print("Optimal feature subset: ", tuple(sort_descending_index[:best_top_N]))
+    print("Optimal feature subset names: ", optimal_features)
+    print("best CR by Fisher’s Criterion: {:.2f}".format(best_CR))
 
 def main():
     breast_cancer_data = load_breast_cancer()
@@ -149,12 +215,8 @@ def main():
     #malignant=0,benign=1
     
     SFS(x,y,feature_names)
-   
+    print()
+    Fisher(x,y,feature_names)
     
-
-
-
-
-
 if __name__ == '__main__':
     main()
