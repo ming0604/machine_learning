@@ -77,7 +77,7 @@ class LDA_classifier:
 def two_fold_LDA(x,y):
 
     LDA = LDA_classifier(C1=1, C2=1)
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=0)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.5, random_state=777)
 
     #fold 1 : x_train as training data, x_test as test data
     #seperate label 0 and label 1 data 
@@ -110,7 +110,7 @@ def SFS(data,y,feature_names):
         CR_max = 0
         for feature in remaining_features:
             temp_feature = selected_features + [feature]
-            temp_feature.sort()
+            #temp_feature.sort()
             x = data[ : , temp_feature]
             CR = two_fold_LDA(x,y)
             if(CR>CR_max):
@@ -130,15 +130,18 @@ def SFS(data,y,feature_names):
     best_CR = SFS_feature_CR[max_index]
     optimal_feature_number = len(SFS_feature_subset[max_index])
     optimal_features = feature_names[list(SFS_feature_subset[max_index])]
-    for features,CR in zip(SFS_feature_subset,SFS_feature_CR):
+    steps = [i for i in range(len(SFS_feature_subset))]
+    for i,features,CR in zip(steps,SFS_feature_subset,SFS_feature_CR):
+        print("Step{:d} :".format(i+1))
         print("The number of features in this subset: ", len(features))
         print("feature subset:", features)
-        print("Highest validated balanced accuracy: {:.2f}".format(CR))
+        print("Highest validated balanced accuracy: {:.2f}%".format(CR))
         print()
+
     print("The number of features in the Optimal feature subset: {:d} ".format(optimal_feature_number))
     print("Optimal feature subset: ", SFS_feature_subset[max_index] )
     print("Optimal feature subset names: ", optimal_features)
-    print("best CR by SFS: {:.2f}".format(best_CR))
+    print("Best CR by SFS: {:.2f}%".format(best_CR))
 
 def Fisher(data,y,feature_names):
     x_label_0 = data[y==0]
@@ -151,23 +154,24 @@ def Fisher(data,y,feature_names):
     p1=(n1/(n1+n2))
     p2=(n2/(n1+n2))
     feature_num = len(data[0])
+    
     #calculate Sw
     sw1 = np.zeros((feature_num, feature_num))
     for xi in x_label_0:
-        xi=np.array([xi])
-        temp = np.matmul(((xi-m1).T),(xi-m1))
+        xii=np.array([xi])
+        temp = np.matmul(((xii-m1).T),(xii-m1))
         sw1 = sw1 + temp
     
     sw2 = np.zeros((feature_num, feature_num))
     for xj in x_label_1:
-        xj=np.array([xj])
-        temp = np.matmul(((xj-m2).T),(xj-m2))
+        xjj =np.array([xj])
+        temp = np.matmul(((xjj-m2).T),(xjj-m2))
         sw2 = sw2 + temp
 
     sw1 = sw1/(n1)
     sw2 = sw2/(n2)
     Sw =  p1*sw1 + p2*sw2
-    
+
     #calculate Sb
     sb1 = n1*(np.matmul(((m1-m).T),(m1-m)))
     sb2 = n2*(np.matmul(((m2-m).T),(m2-m)))
@@ -176,7 +180,7 @@ def Fisher(data,y,feature_names):
     #calculate fisher's scores
     fisher_scores = []
     for k in range(feature_num):
-        f_score = Sw[k,k]/Sb[k,k]
+        f_score = Sb[k,k]/Sw[k,k]
         fisher_scores.append(f_score)
 
     #sort features by fisher's scores in descending order
@@ -198,14 +202,15 @@ def Fisher(data,y,feature_names):
     CR_max_index = np.argmax(np.array(CR_list))
     best_top_N = CR_max_index+1
     for i in range(feature_num):
-        print("Top-{:d}-ranked features, CR: {:.2f} ".format(i+1,CR_list[i]))
+        print("Top-{:d}-ranked features, Validated balanced accuracy: {:.2f}% ".format(i+1,CR_list[i]))
 
+    print()
     optimal_features = feature_names[sort_descending_index[:best_top_N]]
     best_CR = CR_list[CR_max_index]
     print("The number of features in the Optimal feature subset: {:d} ".format(best_top_N))
     print("Optimal feature subset: ", tuple(sort_descending_index[:best_top_N]))
     print("Optimal feature subset names: ", optimal_features)
-    print("best CR by Fisher’s Criterion: {:.2f}".format(best_CR))
+    print("Best CR by Fisher's Criterion: {:.2f}%".format(best_CR))
 
 def main():
     breast_cancer_data = load_breast_cancer()
